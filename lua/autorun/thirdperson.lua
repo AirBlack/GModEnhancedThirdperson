@@ -44,6 +44,17 @@ if CLIENT then
 				end
 			end
 		end
+		
+		local vsync = GetConVar("thirdperson_etp_vehicles_sync"):GetBool()
+
+		if vsync and ply:InVehicle() then
+			local veh = ply:GetVehicle()
+			if thirdPerson:GetBool() then
+				veh:SetThirdPersonMode(true)
+			else
+				veh:SetThirdPersonMode(false)
+			end
+		end
 	end)
 
 	hook.Add("CalcView", "thirdperson_etp", function(ply, pos, ang, fov, znear, zfar)
@@ -56,17 +67,6 @@ if CLIENT then
 		local angleY = GetConVar("thirdperson_etp_angle_y"):GetFloat()
 		local angleZ = GetConVar("thirdperson_etp_angle_z"):GetFloat()
 		local useheadPos = GetConVar("thirdperson_etp_headpos"):GetBool()
-
-		local vsync = GetConVar("thirdperson_etp_vehicles_sync"):GetBool()
-
-		if vsync and ply:InVehicle() then
-			local veh = ply:GetVehicle()
-			if thirdPersonEnabled then
-				veh:SetThirdPersonMode(true)
-			else
-				veh:SetThirdPersonMode(false)
-			end
-		end
 
 		if ply:Crouching() and !useheadPos then offsetZ = offsetZ + crouchadd end
 				if thirdPersonEnabled and !ply:InVehicle() and ply:Alive() then
@@ -171,7 +171,6 @@ if CLIENT then
 	end)
 
 	local recoilCone = 0
-	//local fire = false
 
 	hook.Add("HUDPaint", "EnhancedThirdpersonMouse", function()
 		local ply = LocalPlayer()
@@ -205,19 +204,14 @@ if CLIENT then
 			if cone then
 				local weapon = ply:GetActiveWeapon()
 				if IsValid(weapon) and weapon.CalculateConeRecoil then
-						recoilCone = math.Clamp((weapon:CalculateConeRecoil() * 90) / ply:GetFOV() * ScrH() / 1.44, 6, py)
+					recoilCone = math.Clamp((weapon:CalculateConeRecoil() * 90) / ply:GetFOV() * ScrH() / 1.44, 6, py)
 				else
-					recoilCone = Lerp(math.min(FrameTime() * 9, 1), recoilCone, 13)
-					/*if ply:Alive() then
-						if weapon:GetNextPrimaryFire() > CurTime() then
-							if !fire then
-								if weapon:Clip1() > 0 then
-									recoilCone = recoilCone + 0.5
-								end
-								fire = false
-							end
+					recoilCone = Lerp(math.min(FrameTime() * 12, 1), recoilCone, 13)
+					if IsValid(weapon) then
+						if CurTime() < weapon:GetNextPrimaryFire() and weapon:Clip1() > 0 then
+							recoilCone = math.Clamp(recoilCone + 1, 0, 30)
 						end
-					end*/
+					end
 				end
 
 				if outline then
@@ -225,18 +219,9 @@ if CLIENT then
 					surface.DrawCircle(px, py, recoilCone + 0.1, outlineR , outlineG, outlineB, outlineA)
 				end
 				for i = 1, CsrSize do
-					surface.DrawCircle(px, py, 13 + recoilCone + i + 0.1, CsrR, CsrG, CsrB, CsrA)
+					surface.DrawCircle(px, py, recoilCone + i + 0.1, CsrR, CsrG, CsrB, CsrA)
 				end
 			end
-		end
-	end)
-
-	hook.Add("EntityFireBullets", "ViceHudDetectAttack", function(ent, data)
-		local ply = LocalPlayer()
-		local cone = GetConVar("thirdperson_etp_crosshair_cone"):GetBool()
-		local useCrossHair = GetConVar("thirdperson_etp_crosshair"):GetBool()
-		if (ply == ent) and cone and useCrossHair then
-			recoilCone = math.Clamp(recoilCone + 5, 0, 30)
 		end
 	end)
 
@@ -431,7 +416,6 @@ elseif SERVER then
 	hook.Add("PlayerEnteredVehicle", "EnhancedThirdpersonСheckVehicleEntered", function(ply, veh, role)
 		local thirdPersonEnabled = ply:GetInfoNum("thirdperson_etp", 0) == 1
 		if IsValid(veh) then
-			//илья блять дебил а если машина удолилась и не существует ЛОХХХХХ
 			if thirdPersonEnabled then
 				veh:SetThirdPersonMode(true)
 			else
