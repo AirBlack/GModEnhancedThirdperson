@@ -7,15 +7,17 @@ if CLIENT then
 	local cameraPos = Vector()
 	local cameraAng = Angle()
 
-	local cameraFree = false;
-
+	local freeLookAngles = nil;
 
 	concommand.Add("+thirdperson_etp_free", function(ply, cmd, args)
-		cameraFree = true
+		freeLookAngles = Angle(ply.CustomViewAngles.p, ply.CustomViewAngles.y, ply.CustomViewAngles.r)
 	end)
 
 	concommand.Add("-thirdperson_etp_free", function(ply, cmd, args)
-		cameraFree = false
+		if freeLookAngles then
+			ply.CustomViewAngles = freeLookAngles
+			freeLookAngles = nil
+		end
 	end)
 
 	concommand.Add("thirdperson_enhanced_toggle", function(ply, cmd, args)
@@ -62,7 +64,12 @@ if CLIENT then
 		local angleY = GetConVar("thirdperson_etp_angle_y"):GetFloat()
 		local angleZ = GetConVar("thirdperson_etp_angle_z"):GetFloat()
 		local headPos = GetConVar("thirdperson_etp_headpos"):GetBool()
-		local fov = GetConVar("thirdperson_etp_fov"):GetInt()
+
+		local originalFov = GetConVar("fov_desired"):GetFloat()
+		local configFov = GetConVar("thirdperson_etp_fov"):GetFloat()
+
+		local calculatedFov = configFov + (oldFov - originalFov)
+
 		local smoothing = GetConVar("thirdperson_etp_smoothing"):GetBool()
 		local smoothingSpeed = GetConVar("thirdperson_etp_smoothing_speed"):GetFloat() / 3.5
 
@@ -71,10 +78,9 @@ if CLIENT then
 		end
 
 		if thirdperson and !ply:InVehicle() and ply:Alive() then
+			ply.CustomViewAngles = ply.CustomViewAngles or Angle()
 
-			ply.CustomView = ply.CustomView or Angle()
-
-			local newAng = ply.CustomView
+			local newAng = ply.CustomViewAngles
 			local newPos = Vector(pos.x, pos.y, pos.z)
 
 			if (headPos) then
@@ -119,7 +125,7 @@ if CLIENT then
 			local view = {
 				drawviewer = true,
 				origin = cameraPos,
-				fov = fov,
+				fov = calculatedFov,
 				angles = cameraAng + ply:GetViewPunchAngles(),
 				znear = znear,
 				zfar = zfar
@@ -146,23 +152,20 @@ if CLIENT then
 		local aim = GetConVar("thirdperson_etp_aim"):GetBool()
 
 		if aim and thirdperson and !ply:InVehicle() and ply:Alive() then
-			ply.CustomView = ply.CustomView or Angle()
+			ply.CustomViewAngles = ply.CustomViewAngles or Angle()
+			ply.CustomMoveAngles = ply.CustomMoveAngles or Angle()
 
 			local pos = EyePos()
 
 			local tr = util.TraceLine({
 				start = pos,
-				endpos = pos + ply.CustomView:Forward() * 100000,
+				endpos = pos + ply.CustomViewAngles:Forward() * 100000,
 				filter = ply
 			})
 
 			local newEyeAng = Angle()
 
-			if cameraFree then
-				newEyeAng = (ply:EyePos()):Angle()
-			else
-				newEyeAng = (tr.HitPos - ply:EyePos()):Angle()
-			end
+			newEyeAng = (tr.HitPos - ply:EyePos()):Angle()
 
 			local eyeAngLerpSpeed = math.min(1, FrameTime() * 20)
 
@@ -172,16 +175,23 @@ if CLIENT then
 
 			if lastAng != plyang then
 				local dif = (plyang - lastAng)
-				ply.CustomView.y = ply.CustomView.y + dif.y
-				ply.CustomView.p = math.Clamp(ply.CustomView.p + dif.p, -89, 89)
+				ply.CustomViewAngles.y = ply.CustomViewAngles.y + dif.y
+				ply.CustomViewAngles.p = math.Clamp(ply.CustomViewAngles.p + dif.p, -89, 89)
 			end
 
-			cmd:SetViewAngles(newEyeAng)
+			if freeLookAngles then
+				ply.CustomMoveAngles = freeLookAngles
+				cmd:SetViewAngles(newEyeAng)
+			else
+				ply.CustomMoveAngles = ply.CustomViewAngles
+				cmd:SetViewAngles(newEyeAng)
+			end
 
 			lastAng = newEyeAng
 
 			net.Start("EnhancedThirdperson_SendCustomView")
-			net.WriteAngle(ply.CustomView)
+			net.WriteAngle(ply.CustomViewAngles)
+			net.WriteAngle(ply.CustomMoveAngles)
 			net.SendToServer()
 		end
 
@@ -348,7 +358,8 @@ elseif SERVER then
 	end
 
 	net.Receive("EnhancedThirdperson_SendCustomView", function(len, ply)
-		ply.CustomView = net.ReadAngle()
+		ply.CustomViewAngles = net.ReadAngle()
+		ply.CustomMoveAngles = net.ReadAngle()
 	end)
 
 	hook.Add("PlayerEnteredVehicle", "ThirdpersonEnhanced_PlayerEnteredVehicle", function(ply, veh, role)
@@ -382,7 +393,7 @@ hook.Add("SetupMove", "ThirdpersonEnhanced_SetupMove", function(ply, mv)
 	local thirdperson = ply:GetInfoNum("thirdperson_etp", 0) == 1
 
 	if thirdperson and !ply:InVehicle() and ply:Alive() then
-		ply.CustomView = ply.CustomView or Angle()
-		mv:SetMoveAngles(ply.CustomView)
+		ply.CustomMoveAngles = ply.CustomMoveAngles or Angle()
+		mv:SetMoveAngles(ply.CustomMoveAngles)
 	end
 end)
