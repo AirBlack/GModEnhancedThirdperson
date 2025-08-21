@@ -1,6 +1,7 @@
 if CLIENT then
 
 	local bindPressed = false
+	local freelookPressed = false
 	local lastAng = Angle()
 	local recoilCone = 0
 
@@ -204,6 +205,19 @@ if CLIENT then
 				if bindPressed then
 					ply:ConCommand("thirdperson_enhanced_toggle")
 					bindPressed = false
+				end
+			end
+
+			local freelookKey = GetConVar("thirdperson_etp_freelook_bind"):GetInt()
+			if input.IsKeyDown(freelookKey) then
+				if !freelookPressed then
+					ply:ConCommand("+thirdperson_etp_free")
+					freelookPressed = true
+				end
+			else
+				if freelookPressed then
+					ply:ConCommand("-thirdperson_etp_free")
+					freelookPressed = false
 				end
 			end
 		end
