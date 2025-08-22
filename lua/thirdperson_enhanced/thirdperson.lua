@@ -11,7 +11,9 @@ if CLIENT then
 	local freeLookAngles = nil;
 
 	concommand.Add("+thirdperson_etp_free", function(ply, cmd, args)
-		freeLookAngles = Angle(ply.CustomViewAngles.p, ply.CustomViewAngles.y, ply.CustomViewAngles.r)
+		if ply.CustomViewAngles then // If there is no custom view angles means that player never entered thirdperson mode yet
+			freeLookAngles = Angle(ply.CustomViewAngles.p, ply.CustomViewAngles.y, ply.CustomViewAngles.r)
+		end
 	end)
 
 	concommand.Add("-thirdperson_etp_free", function(ply, cmd, args)
