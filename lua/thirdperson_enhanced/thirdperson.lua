@@ -33,7 +33,7 @@ if CLIENT then
 	concommand.Add("thirdperson_enhanced_toggle", function(ply, cmd, args)
 		local thirdperson = GetConVar("thirdperson_etp")
 
-		thirdperson:SetBool(!thirdperson:GetBool())
+		thirdperson:SetBool(not thirdperson:GetBool())
 
 		if thirdperson then
 			ThirdpersonEnhanced.cameraPos = ply:EyePos()
@@ -114,11 +114,11 @@ if CLIENT then
 		local smoothing = GetConVar("thirdperson_etp_smoothing"):GetBool()
 		local smoothingSpeed = GetConVar("thirdperson_etp_smoothing_speed"):GetFloat() / 3.5
 
-		if ply:Crouching() and !headPos then
+		if ply:Crouching() and not headPos then
 			offsetZ = offsetZ + crouchadd
 		end
 
-		if thirdperson and !ply:InVehicle() and ply:Alive() then
+		if thirdperson and not ply:InVehicle() and ply:Alive() then
 			ply.CustomViewAngles = ply.CustomViewAngles or Angle()
 
 			local newAng = ply.CustomViewAngles
@@ -141,7 +141,7 @@ if CLIENT then
 
 			pos = tr.HitPos
 
-			if !GetConVar("thirdperson_etp_aim"):GetBool() then
+			if not GetConVar("thirdperson_etp_aim"):GetBool() then
 				newAng.x = angleX
 				newAng.y = angleY
 				newAng.z = angleZ
@@ -150,8 +150,8 @@ if CLIENT then
 			if smoothing then
 				local lerpSpeed = math.min(1, FrameTime() * smoothingSpeed)
 
-				ThirdpersonEnhanced.cameraPos = LerpVector( lerpSpeed, ThirdpersonEnhanced.cameraPos, pos )
-				ThirdpersonEnhanced.cameraAng = LerpAngle( lerpSpeed, ThirdpersonEnhanced.cameraAng, newAng )
+				ThirdpersonEnhanced.cameraPos = LerpVector(lerpSpeed, ThirdpersonEnhanced.cameraPos, pos)
+				ThirdpersonEnhanced.cameraAng = LerpAngle(lerpSpeed, ThirdpersonEnhanced.cameraAng, newAng)
 			else
 				ThirdpersonEnhanced.cameraPos = pos
 				ThirdpersonEnhanced.cameraAng = newAng
@@ -171,12 +171,12 @@ if CLIENT then
 	end)
 
 	hook.Add("RenderScreenspaceEffects", "ThirdpersonEnhanced_RenderScreenspaceEffects", function()
-		cam.Start3D(EyePos(),EyeAngles())
+		cam.Start3D(EyePos(), EyeAngles())
 		cam.End3D()
 	end)
 
 	hook.Add("ShouldDrawLocalPlayer", "ThirdpersonEnhanced_ShouldDrawLocalPlayer", function(ply)
-		if GetConVar("thirdperson_etp"):GetBool() and !ply:InVehicle() then
+		if GetConVar("thirdperson_etp"):GetBool() and not ply:InVehicle() then
 			return true
 		end
 	end)
@@ -186,7 +186,7 @@ if CLIENT then
 		local thirdperson = GetConVar("thirdperson_etp"):GetBool()
 		local aim = GetConVar("thirdperson_etp_aim"):GetBool()
 
-		if aim and thirdperson and !ply:InVehicle() and ply:Alive() then
+		if aim and thirdperson and not ply:InVehicle() and ply:Alive() then
 			ply.CustomViewAngles = ply.CustomViewAngles or Angle()
 			ply.CustomMoveAngles = ply.CustomMoveAngles or Angle()
 
@@ -230,7 +230,7 @@ if CLIENT then
 			net.SendToServer()
 		end
 
-		if (system.IsLinux() or system.HasFocus()) and !vgui.GetKeyboardFocus() and !gui.IsGameUIVisible() and !gui.IsConsoleVisible() then
+		if (system.IsLinux() or system.HasFocus()) and not vgui.GetKeyboardFocus() and not gui.IsGameUIVisible() and not gui.IsConsoleVisible() then
 			local bindKey = GetConVar("thirdperson_etp_bind"):GetInt()
 
 			if input.IsKeyDown(bindKey) then
@@ -244,7 +244,7 @@ if CLIENT then
 
 			local freelookKey = GetConVar("thirdperson_etp_freelook_bind"):GetInt()
 			if input.IsKeyDown(freelookKey) then
-				if !ThirdpersonEnhanced.freelookPressed then
+				if not ThirdpersonEnhanced.freelookPressed then
 					ply:ConCommand("+thirdperson_etp_free")
 					ThirdpersonEnhanced.freelookPressed = true
 				end
@@ -297,7 +297,7 @@ if CLIENT then
 		local crosshairSize = GetConVar("thirdperson_etp_crosshair_size"):GetFloat()
 		local outlineSize = crosshairSize + 1
 
-		if thirdperson and crosshair and !ply:InVehicle() and ply:Alive() then
+		if thirdperson and crosshair and not ply:InVehicle() and ply:Alive() then
 			local px = (ScrW() / 2)
 			local py = (ScrH() / 2)
 
@@ -349,23 +349,23 @@ if CLIENT then
 				local y4 = py - gap - length
 
 				if outline then
-					surface.SetDrawColor( outlineColor )
-					surface.DrawOutlinedRect( x1 - 1, y1 - 1, length + 2, crosshairSize + 2 )
-					surface.DrawOutlinedRect( x2 - 1, y2 - 1, length + 2, crosshairSize + 2 )
-					surface.DrawOutlinedRect( x3 - 1, y3 - 1, crosshairSize + 2, length + 2 )
-					surface.DrawOutlinedRect( x4 - 1, y4 - 1, crosshairSize + 2, length + 2 )
+					surface.SetDrawColor(outlineColor)
+					surface.DrawOutlinedRect(x1 - 1, y1 - 1, length + 2, crosshairSize + 2)
+					surface.DrawOutlinedRect(x2 - 1, y2 - 1, length + 2, crosshairSize + 2)
+					surface.DrawOutlinedRect(x3 - 1, y3 - 1, crosshairSize + 2, length + 2)
+					surface.DrawOutlinedRect(x4 - 1, y4 - 1, crosshairSize + 2, length + 2)
 				end
 
-				surface.SetDrawColor( crosshairColor )
-				surface.DrawRect( x1, y1, length, crosshairSize )
-				surface.DrawRect( x2, y2, length, crosshairSize )
-				surface.DrawRect( x3, y3, crosshairSize, length )
-				surface.DrawRect( x4, y4, crosshairSize, length )
+				surface.SetDrawColor(crosshairColor)
+				surface.DrawRect(x1, y1, length, crosshairSize)
+				surface.DrawRect(x2, y2, length, crosshairSize)
+				surface.DrawRect(x3, y3, crosshairSize, length)
+				surface.DrawRect(x4, y4, crosshairSize, length)
 			end
 		end
 	end)
 
-	hook.Add( "HUDShouldDraw", "ThirdpersonEnhanced_HUDShouldDraw", function(name)
+	hook.Add("HUDShouldDraw", "ThirdpersonEnhanced_HUDShouldDraw", function(name)
 		local thirdperson = GetConVar("thirdperson_etp"):GetBool()
 		local crosshair = GetConVar("thirdperson_etp_crosshair"):GetBool()
 
@@ -392,7 +392,7 @@ elseif SERVER then
 				local style = ent:GetInfoNum("thirdperson_etp_crosshair_style", 0) != 0
 				if thirdPerson and style then
 					net.Start("EnhancedThirdpersonShoot")
-						net.WriteDouble(tabl.Spread:Length2D())
+					net.WriteDouble(tabl.Spread:Length2D())
 					net.Send(ent)
 				end
 			end
@@ -434,7 +434,7 @@ end
 hook.Add("SetupMove", "ThirdpersonEnhanced_SetupMove", function(ply, mv)
 	local thirdperson = ply:GetInfoNum("thirdperson_etp", 0) == 1
 
-	if thirdperson and !ply:InVehicle() and ply:Alive() then
+	if thirdperson and not ply:InVehicle() and ply:Alive() then
 		ply.CustomMoveAngles = ply.CustomMoveAngles or Angle()
 		mv:SetMoveAngles(ply.CustomMoveAngles)
 	end

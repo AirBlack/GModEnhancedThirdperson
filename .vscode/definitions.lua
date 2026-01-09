@@ -10,7 +10,7 @@
 --- @field CalculateConeRecoil? fun(): number Some weapon bases calculate cone recoil, I don't quite remember which
 
 ---@class DCheckBoxLabel
-DCheckBoxLabel = { }
+DCheckBoxLabel = {}
 ---![(Client and menu)](https://github.com/user-attachments/assets/25d1a1c8-4288-4a51-9867-5e3bb51b9981) Called when the "checked" state is changed. This is meant to be Overriden
 ---
 ---[View wiki]https://wiki.facepunch.com/gmod/DCheckBoxLabel:OnChange()
@@ -18,7 +18,7 @@ DCheckBoxLabel = { }
 function DCheckBoxLabel:OnChange(bVal) end
 
 ---@class DForm
-DForm = { }
+DForm = {}
 ---![(Client and menu)](https://github.com/user-attachments/assets/25d1a1c8-4288-4a51-9867-5e3bb51b9981) Adds a [DCheckBoxLabel](https://wiki.facepunch.com/gmod/DCheckBoxLabel) onto the [DForm](https://wiki.facepunch.com/gmod/DForm).
 --- **NOTE**: This will run [DCheckBoxLabel:OnChange](https://wiki.facepunch.com/gmod/DCheckBoxLabel:OnChange) when being added. This is caused by [Panel:SetConVar](https://wiki.facepunch.com/gmod/Panel:SetConVar) being used when this function is used. To avoid this, use [DForm:AddItem](https://wiki.facepunch.com/gmod/DForm:AddItem) with a [DCheckBoxLabel](https://wiki.facepunch.com/gmod/DCheckBoxLabel).
 ---

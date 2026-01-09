@@ -1,4 +1,5 @@
 if CLIENT then
+	---@diagnostic disable:codestyle-check
 	CreateClientConVar("thirdperson_etp", 							"0", 		true, true)
 	CreateClientConVar("thirdperson_etp_headpos", 					"0", 		true, true)
 	CreateClientConVar("thirdperson_etp_offset_x",					"-40.0", 	true, true)
@@ -31,7 +32,8 @@ if CLIENT then
 	CreateClientConVar("thirdperson_etp_vehicles_sync", 			"1",		true, true)
 	CreateClientConVar("thirdperson_etp_addons_sync", 				"1",		true, true)
 	CreateClientConVar("thirdperson_etp_cameracollisionmode", tostring(THIRDPERSON_ENHANCED.CameraCollisionMode.worldPropsPlayersAndNpcs), true, true)
-	language.Add( "Thirdperson", "Thirdperson" )
+	---@diagnostic enable:codestyle-check
+	language.Add("Thirdperson", "Thirdperson")
 
 	hook.Add("PopulateToolMenu", "ThirdpersonSandboxMenu", function()
 		spawnmenu.AddToolMenuOption("Utilities", "User", "thirdperson_etp_options", "Thirdperson", "", "", function(panel)
@@ -69,7 +71,7 @@ if CLIENT then
 			local toolPresets = panel:ToolPresets("util_thirdperson_extension", defaults)
 
 			local preloadedOptions = {
-				[ "GTA V/Max Payne 3" ] = {
+				["GTA V/Max Payne 3"] = {
 					thirdperson_etp_headpos = "0",
 					thirdperson_etp_offset_x = "-100.0",
 					thirdperson_etp_offset_y = "35.0",
@@ -96,7 +98,7 @@ if CLIENT then
 					thirdperson_etp_crosshair_outline_b = "0",
 					thirdperson_etp_crosshair_outline_alpha = "255"
 				},
-				[ "GTA IV" ] = {
+				["GTA IV"] = {
 					thirdperson_etp_headpos = "0",
 					thirdperson_etp_offset_x = "-100.0",
 					thirdperson_etp_offset_y = "35.0",
@@ -123,7 +125,7 @@ if CLIENT then
 					thirdperson_etp_crosshair_outline_b = "0",
 					thirdperson_etp_crosshair_outline_alpha = "255"
 				},
-				[ "GTA IV TLAD" ] = {
+				["GTA IV TLAD"] = {
 					thirdperson_etp_headpos = "0",
 					thirdperson_etp_offset_x = "-100.0",
 					thirdperson_etp_offset_y = "35.0",
@@ -150,7 +152,7 @@ if CLIENT then
 					thirdperson_etp_crosshair_outline_b = "0",
 					thirdperson_etp_crosshair_outline_alpha = "255"
 				},
-				[ "GTA IV TBOGT" ] = {
+				["GTA IV TBOGT"] = {
 					thirdperson_etp_headpos = "0",
 					thirdperson_etp_offset_x = "-100.0",
 					thirdperson_etp_offset_y = "35.0",
@@ -177,7 +179,7 @@ if CLIENT then
 					thirdperson_etp_crosshair_outline_b = "0",
 					thirdperson_etp_crosshair_outline_alpha = "255"
 				},
-				[ "Saints Row/Just Cause" ] = {
+				["Saints Row/Just Cause"] = {
 					thirdperson_etp_headpos = "0",
 					thirdperson_etp_offset_x = "-100.0",
 					thirdperson_etp_offset_y = "35.0",
@@ -204,7 +206,7 @@ if CLIENT then
 					thirdperson_etp_crosshair_outline_b = "0",
 					thirdperson_etp_crosshair_outline_alpha = "255"
 				},
-				[ "Machinima" ] = {
+				["Machinima"] = {
 					thirdperson_etp_headpos = "0",
 					thirdperson_etp_offset_x = "-200.0",
 					thirdperson_etp_offset_y = "0.0",
@@ -231,7 +233,7 @@ if CLIENT then
 					thirdperson_etp_crosshair_outline_b = "0",
 					thirdperson_etp_crosshair_outline_alpha = "255"
 				},
-				[ "Minecraft" ] = {
+				["Minecraft"] = {
 					thirdperson_etp_headpos = "0",
 					thirdperson_etp_offset_x = "-150.00",
 					thirdperson_etp_offset_y = "0.0",
@@ -258,7 +260,7 @@ if CLIENT then
 					thirdperson_etp_crosshair_outline_b = "0",
 					thirdperson_etp_crosshair_outline_alpha = "255"
 				},
-				[ "Mass Effect" ] = {
+				["Mass Effect"] = {
 					thirdperson_etp_headpos = "0",
 					thirdperson_etp_offset_x = "-50.0",
 					thirdperson_etp_offset_y = "20.0",
@@ -285,7 +287,7 @@ if CLIENT then
 					thirdperson_etp_crosshair_outline_b = "0",
 					thirdperson_etp_crosshair_outline_alpha = "255"
 				},
-				[ "Firstperson" ] = {
+				["Firstperson"] = {
 					thirdperson_etp_headpos = "1",
 					thirdperson_etp_offset_x = "5.0",
 					thirdperson_etp_offset_y = "0.0",
@@ -361,7 +363,7 @@ if CLIENT then
 
 			aimingCheckbox.OnChange = function(_, aimingEnabled)
 				for _, slider in ipairs(angleSliders) do
-					slider:SetEnabled(!aimingEnabled)
+					slider:SetEnabled(not aimingEnabled)
 				end
 			end
 

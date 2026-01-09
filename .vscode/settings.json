@@ -1,7 +1,7 @@
 {
     "Lua.workspace.library": [
         "${addons}/garrysmod/module/library",
-        "${workspaceFolder}/definitions.lua"
+        "${workspaceFolder}/.vscode/definitions.lua"
     ],
     "Lua.runtime.version": "LuaJIT",
     "Lua.runtime.special": {
@@ -10,5 +10,12 @@
     },
     "Lua.runtime.nonstandardSymbol": ["!", "!=", "&&", "||", "//", "/**/", "continue"],
     "Lua.diagnostics.disable": [],
+    "Lua.format.defaultConfig": {
+        "indent_style": "tab",
+        "indent_size": "4"
+    },
+    "Lua.diagnostics.neededFileStatus": {
+        "codestyle-check": "Any"
+    },
     "Lua.workspace.checkThirdParty": false
 }
