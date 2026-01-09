@@ -1,25 +1,32 @@
 if CLIENT then
-
-	local bindPressed = false
-	local freelookPressed = false
-	local lastAng = Angle()
-	local recoilCone = 0
-
-	local cameraPos = Vector()
-	local cameraAng = Angle()
-
-	local freeLookAngles = nil;
+	---@class ThirdpersonEnhancedStruct
+	---@field bindPressed boolean Whether or not thirdperson key bind was pressed in the current frame. Used to activate bind on key release.
+	---@field freelookPressed boolean Whether or not free look key bind was pressed in the current frame. Used to activate bind on key release.
+	---@field lastAng Angle Last known players eye angles, used to calculate a diff angle between frames and add that diff to the custom view angles.
+	---@field recoilCone number Recoil cone extracted from the current weapon, used to display weapon cone fluctuations on the crosshair while shooting.
+	---@field cameraPos Vector Current position of the thirdperson camera. It is stored so we could do smoothing.
+	---@field cameraAng Angle Current angle of the thirdperson camera. It is stored so we could do smoothing.
+	---@field freeLookAngles Angle? Free look mode movement angle. We move the player in that direction if free look mode is active.
+	local ThirdpersonEnhanced = {
+		bindPressed = false,
+		freelookPressed = false,
+		lastAng = Angle(),
+		recoilCone = 0,
+		cameraPos = Vector(),
+		cameraAng = Angle(),
+		freeLookAngles = nil
+	}
 
 	concommand.Add("+thirdperson_etp_free", function(ply, cmd, args)
-		if ply.CustomViewAngles then // If there is no custom view angles means that player never entered thirdperson mode yet
-			freeLookAngles = Angle(ply.CustomViewAngles.p, ply.CustomViewAngles.y, ply.CustomViewAngles.r)
+		if ply.CustomViewAngles then -- If there is no custom view angles means that player never entered thirdperson mode yet
+			ThirdpersonEnhanced.freeLookAngles = Angle(ply.CustomViewAngles.p, ply.CustomViewAngles.y, ply.CustomViewAngles.r)
 		end
 	end)
 
 	concommand.Add("-thirdperson_etp_free", function(ply, cmd, args)
-		if freeLookAngles then
-			ply.CustomViewAngles = freeLookAngles
-			freeLookAngles = nil
+		if ThirdpersonEnhanced.freeLookAngles then
+			ply.CustomViewAngles = ThirdpersonEnhanced.freeLookAngles
+			ThirdpersonEnhanced.freeLookAngles = nil
 		end
 	end)
 
@@ -29,8 +36,8 @@ if CLIENT then
 		thirdperson:SetBool(!thirdperson:GetBool())
 
 		if thirdperson then
-			cameraPos = ply:EyePos()
-			cameraAng = ply:EyeAngles()
+			ThirdpersonEnhanced.cameraPos = ply:EyePos()
+			ThirdpersonEnhanced.cameraAng = ply:EyeAngles()
 		end
 
 		if GetConVar("thirdperson_etp_addons_sync"):GetBool() and ConVarExists("gtvh_firstperson") then
@@ -56,6 +63,37 @@ if CLIENT then
 			end
 		end
 	end)
+
+	---Gets eye trace of a player with all the filtering settings applied
+	---@param ply Player
+	---@param startPos Vector
+	---@param endPos Vector
+	---@return TraceResult
+	local function getEyeTrace(ply, startPos, endPos)
+		---@type CameraCollisionMode
+		local mode = GetConVar("thirdperson_etp_cameracollisionmode"):GetInt()
+
+		---@type MASK?
+		local mask
+		---@type COLLISION_GROUP?
+		local collisionGroup
+
+		if mode == THIRDPERSON_ENHANCED.CameraCollisionMode.worldOnly then
+			mask = MASK_SOLID_BRUSHONLY
+		elseif mode == THIRDPERSON_ENHANCED.CameraCollisionMode.worldAndprops then
+			collisionGroup = COLLISION_GROUP_DEBRIS
+		end
+
+		return util.TraceHull({
+			start = startPos,
+			endpos = endPos,
+			filter = ply,
+			mask = mask,
+			collisiongroup = collisionGroup,
+			maxs = Vector(5, 5, 5),
+			mins = Vector(-5, -5, -5)
+		})
+	end
 
 	hook.Add("CalcView", "ThirdpersonEnhanced_CalcView", function(ply, pos, ang, oldFov, znear, zfar)
 		local crouchadd = GetConVar("thirdperson_etp_crouchadd"):GetFloat()
@@ -99,13 +137,7 @@ if CLIENT then
 			newPos = newPos + newAng:Up() * offsetZ
 			newPos = newPos + newAng:Forward() * offsetX
 
-			local tr = util.TraceHull({
-				start = pos,
-				endpos = newPos,
-				filter = ply,
-				maxs = Vector(5, 5, 5),
-				mins = Vector(-5, -5, -5)
-			})
+			local tr = getEyeTrace(ply, pos, newPos)
 
 			pos = tr.HitPos
 
@@ -118,18 +150,18 @@ if CLIENT then
 			if smoothing then
 				local lerpSpeed = math.min(1, FrameTime() * smoothingSpeed)
 
-				cameraPos = LerpVector( lerpSpeed, cameraPos, pos )
-				cameraAng = LerpAngle( lerpSpeed, cameraAng, newAng )
+				ThirdpersonEnhanced.cameraPos = LerpVector( lerpSpeed, ThirdpersonEnhanced.cameraPos, pos )
+				ThirdpersonEnhanced.cameraAng = LerpAngle( lerpSpeed, ThirdpersonEnhanced.cameraAng, newAng )
 			else
-				cameraPos = pos
-				cameraAng = newAng
+				ThirdpersonEnhanced.cameraPos = pos
+				ThirdpersonEnhanced.cameraAng = newAng
 			end
 
 			local view = {
 				drawviewer = true,
-				origin = cameraPos,
+				origin = ThirdpersonEnhanced.cameraPos,
 				fov = calculatedFov,
-				angles = cameraAng + ply:GetViewPunchAngles(),
+				angles = ThirdpersonEnhanced.cameraAng + ply:GetViewPunchAngles(),
 				znear = znear,
 				zfar = zfar
 			}
@@ -176,21 +208,21 @@ if CLIENT then
 			newEyeAng = LerpAngle(eyeAngLerpSpeed, ply:EyeAngles(), newEyeAng)
 			local plyang = cmd:GetViewAngles()
 
-			if lastAng != plyang then
-				local dif = (plyang - lastAng)
+			if ThirdpersonEnhanced.lastAng != plyang then
+				local dif = (plyang - ThirdpersonEnhanced.lastAng)
 				ply.CustomViewAngles.y = ply.CustomViewAngles.y + dif.y
 				ply.CustomViewAngles.p = math.Clamp(ply.CustomViewAngles.p + dif.p, -89, 89)
 			end
 
-			if freeLookAngles then
-				ply.CustomMoveAngles = freeLookAngles
+			if ThirdpersonEnhanced.freeLookAngles then
+				ply.CustomMoveAngles = ThirdpersonEnhanced.freeLookAngles
 				cmd:SetViewAngles(newEyeAng)
 			else
 				ply.CustomMoveAngles = ply.CustomViewAngles
 				cmd:SetViewAngles(newEyeAng)
 			end
 
-			lastAng = newEyeAng
+			ThirdpersonEnhanced.lastAng = newEyeAng
 
 			net.Start("EnhancedThirdperson_SendCustomView")
 			net.WriteAngle(ply.CustomViewAngles)
@@ -202,24 +234,24 @@ if CLIENT then
 			local bindKey = GetConVar("thirdperson_etp_bind"):GetInt()
 
 			if input.IsKeyDown(bindKey) then
-				bindPressed = true
+				ThirdpersonEnhanced.bindPressed = true
 			else
-				if bindPressed then
+				if ThirdpersonEnhanced.bindPressed then
 					ply:ConCommand("thirdperson_enhanced_toggle")
-					bindPressed = false
+					ThirdpersonEnhanced.bindPressed = false
 				end
 			end
 
 			local freelookKey = GetConVar("thirdperson_etp_freelook_bind"):GetInt()
 			if input.IsKeyDown(freelookKey) then
-				if !freelookPressed then
+				if !ThirdpersonEnhanced.freelookPressed then
 					ply:ConCommand("+thirdperson_etp_free")
-					freelookPressed = true
+					ThirdpersonEnhanced.freelookPressed = true
 				end
 			else
-				if freelookPressed then
+				if ThirdpersonEnhanced.freelookPressed then
 					ply:ConCommand("-thirdperson_etp_free")
-					freelookPressed = false
+					ThirdpersonEnhanced.freelookPressed = false
 				end
 			end
 		end
@@ -228,14 +260,14 @@ if CLIENT then
 	if game.SinglePlayer() then
 		net.Receive("EnhancedThirdpersonShoot", function()
 			local spread = net.ReadDouble()
-			recoilCone = math.Clamp(recoilCone + spread * 200, 0, 30)
+			ThirdpersonEnhanced.recoilCone = math.Clamp(ThirdpersonEnhanced.recoilCone + spread * 200, 0, 30)
 		end)
 	end
 
 	hook.Add("EntityFireBullets", "ThirdpersonEnhanced_EntityFireBullets", function(ent, tabl)
 		local style = GetConVar("thirdperson_etp_crosshair_style"):GetInt() != 0
 		if style and IsValid(ent) and ent:IsPlayer() and ent == LocalPlayer() then
-			recoilCone = math.Clamp(recoilCone + tabl.Spread:Length2D() * 200, 0, 30)
+			ThirdpersonEnhanced.recoilCone = math.Clamp(ThirdpersonEnhanced.recoilCone + tabl.Spread:Length2D() * 200, 0, 30)
 		end
 	end)
 
@@ -266,7 +298,6 @@ if CLIENT then
 		local outlineSize = crosshairSize + 1
 
 		if thirdperson and crosshair and !ply:InVehicle() and ply:Alive() then
-
 			local px = (ScrW() / 2)
 			local py = (ScrH() / 2)
 
@@ -281,17 +312,16 @@ if CLIENT then
 			end
 
 			if style != 0 then
-
 				local wep = ply:GetActiveWeapon()
 
 				if IsValid(wep) and wep.CalculateConeRecoil then
-					recoilCone = math.Clamp((wep:CalculateConeRecoil() * 90) / ply:GetFOV() * ScrH() / 1.44, 6, py)
+					ThirdpersonEnhanced.recoilCone = math.Clamp((wep:CalculateConeRecoil() * 90) / ply:GetFOV() * ScrH() / 1.44, 6, py)
 				else
 					local recoilConeSpeed = math.min(1, FrameTime() * 12)
-					recoilCone = Lerp(recoilConeSpeed, recoilCone, 13)
+					ThirdpersonEnhanced.recoilCone = Lerp(recoilConeSpeed, ThirdpersonEnhanced.recoilCone, 13)
 				end
 
-				gap = GetConVar("thirdperson_etp_crosshair_gap"):GetFloat() * recoilCone
+				gap = GetConVar("thirdperson_etp_crosshair_gap"):GetFloat() * ThirdpersonEnhanced.recoilCone
 
 			end
 
@@ -349,16 +379,14 @@ if CLIENT then
 			end
 		end
 	end)
-
 elseif SERVER then
-
 	util.AddNetworkString("EnhancedThirdperson_SendCustomView")
 
 	if game.SinglePlayer() then
 		util.AddNetworkString("EnhancedThirdpersonShoot")
-
 		hook.Add("EntityFireBullets", "EnhancedThirdpersonShootCLWorkaround", function(ent, tabl)
 			if IsValid(ent) and ent:IsPlayer() then
+				---@cast ent Player
 				local thirdPerson = ent:GetInfoNum("thirdperson_etp", 0) == 1
 
 				local style = ent:GetInfoNum("thirdperson_etp_crosshair_style", 0) != 0
@@ -368,7 +396,6 @@ elseif SERVER then
 					net.Send(ent)
 				end
 			end
-
 		end)
 
 	end
@@ -405,7 +432,6 @@ elseif SERVER then
 end
 
 hook.Add("SetupMove", "ThirdpersonEnhanced_SetupMove", function(ply, mv)
-
 	local thirdperson = ply:GetInfoNum("thirdperson_etp", 0) == 1
 
 	if thirdperson and !ply:InVehicle() and ply:Alive() then

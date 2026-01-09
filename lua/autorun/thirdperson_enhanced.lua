@@ -1,5 +1,11 @@
 THIRDPERSON_ENHANCED = {}
 
+---@enum CameraCollisionMode
+THIRDPERSON_ENHANCED.CameraCollisionMode = {
+	worldPropsPlayersAndNpcs = 0,
+	worldAndprops = 1,
+	worldOnly = 2
+}
 local function IncludeFile(file)
 	if SERVER then
 		include(file);

@@ -1,0 +1,14 @@
+{
+    "Lua.workspace.library": [
+        "${addons}/garrysmod/module/library",
+        "${workspaceFolder}/definitions.lua"
+    ],
+    "Lua.runtime.version": "LuaJIT",
+    "Lua.runtime.special": {
+        "include": "dofile",
+        "IncludeCS": "dofile"
+    },
+    "Lua.runtime.nonstandardSymbol": ["!", "!=", "&&", "||", "//", "/**/", "continue"],
+    "Lua.diagnostics.disable": [],
+    "Lua.workspace.checkThirdParty": false
+}
